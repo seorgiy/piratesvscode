@@ -39,7 +39,7 @@ export class Translater {
       }
 
       const rootPath = workspaceFolders[0].uri.fsPath;
-      const filePath = path.join(rootPath, "Resource", "INI", "texts", "russian", "Localization_Assets", `${this.capitalizeFirstLetter(fileName)}.txt`);
+      const filePath = path.join(rootPath, "mod", "Resource", "INI", "texts", "russian", "Localization_Assets", `${this.capitalizeFirstLetter(fileName)}.txt`);
 
       if (!fs.existsSync(filePath)) {
         vscode.window.showErrorMessage(`Файл не найден: ${filePath}`);
