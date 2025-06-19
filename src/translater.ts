@@ -8,65 +8,61 @@ interface LocFile {
 
 export class Translater {
 
-  replaceLocalizationKeys = (input: string) => {
-    const regexp = /StringFromKey\(\"(.*)\"\)?/g;
+  replaceLocalizationKeys = (language: string, input: string) => {
+    const regexp = /StringFromKey\(\".*\"\)?/g;
     let locals: LocFile = {};
     let locName = "";
 
-    const modifiedSentence = input.replaceAll(regexp, (match: string, p1: string, _p2: string, _p3: string) => {
+    const modifiedSentence = input.replaceAll(regexp, (match: string) => {
+      let key = match.match(/\"(.*?)\"/) || [''];
       if (locName === "") {
-        locName = p1.split("_")[0];
-        locals = this.initLocObj(locName);
+        locName = key[1].split("_")[0];
+        locals = this.initLocFile(language, locName);
       }
-      return `"${locals[p1]}"`;
+      return `"${locals[key[1]]}"`;
     });
 
     return modifiedSentence;
   };
 
-  replaceByKey = (match: string, p1: string, _p2: string, _p3: string) => {
-    return p1;
-  };
-
-  initLocObj = (fileName: string) => {
+  initLocFile = (language: string, fileName: string) => {
     const result: LocFile = {};
 
-    try {
-      const workspaceFolders = vscode.workspace.workspaceFolders;
-      if (!workspaceFolders || workspaceFolders.length === 0) {
-        vscode.window.showErrorMessage('Нет открытых рабочих папок.');
-        return {};
-      }
-
-      const rootPath = workspaceFolders[0].uri.fsPath;
-      const filePath = path.join(rootPath, "mod", "Resource", "INI", "texts", "russian", "Localization_Assets", `${this.capitalizeFirstLetter(fileName)}.txt`);
-
-      if (!fs.existsSync(filePath)) {
-        vscode.window.showErrorMessage(`Файл не найден: ${filePath}`);
-        return {};
-      }
-
-      // Читаем содержимое файла
-      const content = fs.readFileSync(filePath, { encoding: 'utf8', flag: 'r' });
-      this.fillLocObject(result, content, fileName);
-
-    } catch (err: any) {
-      vscode.window.showErrorMessage(`Ошибка: ${err.message}`);
+    const workspaceFolders = vscode.workspace.workspaceFolders;
+    if (!workspaceFolders || workspaceFolders.length === 0) {
+      vscode.window.showErrorMessage('Нет открытых рабочих папок.');
+      return {};
     }
+
+    const editor = vscode.window.activeTextEditor;
+    if (!editor) {
+      vscode.window.showErrorMessage(`Не открыт редактор`);
+      return {};
+    }
+
+    const filepath = editor.document.fileName.split("Program/");
+    const rootPath = filepath[filepath.length - 2];
+    const filePath = path.join(rootPath, "Resource", "INI", "texts", language, "Localization_Assets", `${this.capitalizeFirstLetter(fileName)}.txt`);
+
+    if (!fs.existsSync(filePath)) {
+      vscode.window.showErrorMessage(`Файл не найден: ${filePath}`);
+      return {};
+    }
+
+    const content = fs.readFileSync(filePath, { encoding: 'utf8', flag: 'r' });
+    this.fillLocFile(result, content, fileName);
 
     return result;
   };
 
-  fillLocObject = (locals: LocFile, text: string, _fileName: string) => {
-    // Разбиваем сначала по }, потом по { и убираем лишние символы, чтобы получить key: value тупа
+  // Разбиваем сначала по }, потом по { и убираем лишние символы, чтобы получить key: value тупа
+  fillLocFile = (locals: LocFile, text: string, _fileName: string) => {
     let array: string[] = text.split("}");
     array.pop();
     array.forEach(x => {
       let array2: string[] = x.split("{");
       locals[array2[0].trim()] = array2[1].trim();
     });
-
-    console.log(locals['personality_19']);
   };
 
   capitalizeFirstLetter = (str: string): string => {

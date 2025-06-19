@@ -16,8 +16,32 @@
   "contributes": {
     "commands": [
       {
-        "command": "extension.showLocalizeKeys",
-        "title": "CL translate: russian"
+        "command": "extension.translaterussian",
+        "title": "CL русский"
+      },
+      {
+        "command": "extension.translateenglish",
+        "title": "CL english"
+      },
+      {
+        "command": "extension.translatefrench",
+        "title": "CL french"
+      },
+      {
+        "command": "extension.translategerman",
+        "title": "CL german"
+      },
+      {
+        "command": "extension.translatespanish",
+        "title": "CL spanish"
+      },
+      {
+        "command": "extension.translatepolish",
+        "title": "CL polish"
+      },
+      {
+        "command": "extension.translateitalian",
+        "title": "CL italian"
       }
     ]
   },
