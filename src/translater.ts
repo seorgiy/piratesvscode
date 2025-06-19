@@ -10,11 +10,12 @@ interface LocFile {
 export class Translater {
 
   replaceLocalizationKeys = (language: string, input: string) => {
-    const regexp = /StringFromKey\(\".*\"\)?/g;
+    const regexp = /StringFromKey\((.*)\);?/g;
     let locals: LocFile = {};
     let locName = "";
 
     const modifiedSentence = input.replaceAll(regexp, (match: string) => {
+      console.log(match);
       let key = match.match(/\"(.*?)\"/) || [''];
       if (locName === "") {
         locName = key[1].split("_")[0];
