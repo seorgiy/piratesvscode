@@ -39,7 +39,7 @@ export class Translator {
       return resultKey;
     };
 
-    let libraryName = word.match(/.*_\d{1,3}/);
+    let libraryName = word.match(/(.*)_\d{1,3}/);
     if (libraryName === null){
       return resultKey;
     }
