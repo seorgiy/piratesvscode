@@ -36,28 +36,22 @@
 		"body": ["for (i=$1; i<$2;i++)\n{", "  $0", "}"]
 	},
 
-	"CheckAttribute":  {
+	"CheckAttribute": {
 		"scope": "",
 		"prefix": "checkat",
 		"body": ["CheckAttribute(&$1, $2)$0"]
 	},
 
-	"DeleteAttribute":  {
+	"DeleteAttribute": {
 		"scope": "",
 		"prefix": "delat",
-		"body": ["DeleteAttribute(&$1, $2)$0"]
+		"body": ["DeleteAttribute(&$1, $2);$0"]
 	},
 
-	"IfCheckAttribute":  {
+	"IfCheckAttribute": {
 		"scope": "",
 		"prefix": "ifcheckat",
-		"body": ["if (${1:checkat})$0"]
-	},
-
-	"Notify":  {
-		"scope": "",
-		"prefix": "perksno",
-		"body": ["PerksReworkedNotification(StringFromKey($1),$2)"]
+		"body": ["if (${1:checkat}) $0"]
 	},
 
 	"Void": {
