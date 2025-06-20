@@ -39,8 +39,11 @@ export class Translator {
       return resultKey;
     };
 
-    let parts = word.split("_");
-    let locals = this.#initLocFile(this.#language, parts[0]);
+    let libraryName = word.match(/.*_\d{1,3}/);
+    if (libraryName === null){
+      return resultKey;
+    }
+    let locals = this.#initLocFile(this.#language, libraryName[1]);
 
     if (locals.absolutePath === "") {
       return resultKey;
