@@ -93,7 +93,8 @@ export class Translator {
       return { absolutePath: "" };
     }
 
-    const filepath = editor.document.fileName.split("Program/");
+    const slash = process.platform === "win32" ? "\\" : "/";
+    const filepath = editor.document.fileName.split("Program" + slash);
     const rootPath = filepath[filepath.length - 2];
     const iniPath = join(rootPath, "Resource", "INI", "texts", "Localization_Assets.ini");
     const iniContent = fs.readFileSync(iniPath, 'utf-8');
