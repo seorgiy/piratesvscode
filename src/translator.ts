@@ -1,15 +1,21 @@
-import * as path from 'path';
 import * as fs from 'fs';
+import { join } from 'path';
 import { parse } from 'ini';
-import * as vscode from 'vscode';
-import { log } from 'console';
+import { workspace, window } from 'vscode';
 
 interface LocFile {
-  [key: string]: string
+  [key: string]: string,
+  absolutePath: string
 }
 
 interface LocLibrary {
   [key: string]: LocFile
+}
+
+export interface LocalKey {
+  key: string,
+  value: string,
+  libraryPath: string
 }
 
 export class Translator {
@@ -18,34 +24,36 @@ export class Translator {
 
   constructor() {
     this.#library = {};
-    this.#language = vscode.workspace.getConfiguration('').get('piratesConfig.preferredLanguage') || 'russian';
+    this.#language = "";
+    this.#updateLanguage();
   }
 
-  resetLibrary()
-  {
+  resetLibrary() {
     this.#library = {};
-    this.#language = vscode.workspace.getConfiguration('').get('piratesConfig.preferredLanguage') || 'russian';
+    this.#updateLanguage();
   }
 
   translateKey = (word: string) => {
-    console.log("translateKey: " + word);
-    console.log(this.#library);
+    let resultKey: LocalKey = {key: word, value: "", libraryPath: "" };
     if (!word.includes("_")) {
-      return "";
+      return resultKey;
     };
 
     let parts = word.split("_");
     let locals = this.#initLocFile(this.#language, parts[0]);
 
-    if (isEmptyObject(locals)) {
-      return "";
+    if (locals.absolutePath === "") {
+      return resultKey;
     }
-    return `${locals[word.toLowerCase()]}`;
+
+    resultKey.value = locals[word.toLowerCase()];
+    resultKey.libraryPath = locals.absolutePath;
+    return resultKey;
   };
 
   translateAllKeys = (language: string, input: string) => {
     const regexp = /StringFromKey\((.*)\);?/g;
-    let locals: LocFile = {};
+    let locals: LocFile = { absolutePath: '' };
     let locName = "";
 
     const modifiedSentence = input.replaceAll(regexp, (match: string) => {
@@ -60,50 +68,54 @@ export class Translator {
     return modifiedSentence;
   };
 
+  #updateLanguage = () => {
+    this.#language = workspace.getConfiguration('').get('piratesConfig.preferredLanguage') || 'russian';
+  };
+
   #initLocFile = (language: string, fileName: string) => {
-    if (this.#library.hasOwnProperty(fileName))
-    {
-      console.log('возвращаем кэш');
+    if (this.#library.hasOwnProperty(fileName)) {
       return this.#library[fileName];
     }
 
-    const result: LocFile = {};
+    const result: LocFile = { absolutePath: ''};
 
-    const workspaceFolders = vscode.workspace.workspaceFolders;
+    const workspaceFolders = workspace.workspaceFolders;
     if (!workspaceFolders || workspaceFolders.length === 0) {
-      vscode.window.showErrorMessage('Нет открытых рабочих папок.');
-      return {};
+      window.showErrorMessage('Нет открытых рабочих папок.');
+      return { absolutePath: "" };
     }
-    const editor = vscode.window.activeTextEditor;
+    const editor = window.activeTextEditor;
     if (!editor) {
-      vscode.window.showErrorMessage(`Не открыт редактор`);
-      return {};
+      window.showErrorMessage(`Не открыт редактор`);
+      return { absolutePath: "" };
     }
 
     const filepath = editor.document.fileName.split("Program/");
     const rootPath = filepath[filepath.length - 2];
-    const iniPath = path.join(rootPath, "Resource", "INI", "texts", "Localization_Assets.ini");
+    const iniPath = join(rootPath, "Resource", "INI", "texts", "Localization_Assets.ini");
     const iniContent = fs.readFileSync(iniPath, 'utf-8');
     const config = parse(iniContent);
     const localsPath = config[fileName];
     if (!localsPath) {
-      return {};
+      return { absolutePath: "" };
     }
 
-    const fileFolder = path.join(rootPath, "Resource", "INI", "texts", language, path.join(...localsPath.split("\\")));
+    const fileFolder = join(rootPath, "Resource", "INI", "texts", language, join(...localsPath.split("\\")));
     const filePath: fs.PathOrFileDescriptor = getFileExistIgnoreRegister(fileFolder, fileName);
     if (!fs.existsSync(filePath)) {
-      return {};
+      return { absolutePath: "" };
     }
 
     const content = fs.readFileSync(filePath, { encoding: 'utf8', flag: 'r' });
     this.#fillLocFile(result, content);
-
     this.#library[fileName] = result;
+    result.absolutePath = filePath;
     return result;
   };
 
-  // Разбиваем сначала по }, потом по { и убираем лишние символы, чтобы получить key: value тупа
+  /**
+  Breaking the string by { and }, transforming "key1{value1} key2{value2}" string into {key1: value1, key2: value2} object
+  **/
   #fillLocFile = (locals: LocFile, text: string) => {
     let array: string[] = text.split("}");
     array.pop();
@@ -113,14 +125,6 @@ export class Translator {
     });
   };
 }
-
-const isEmptyObject = (obj: any) => {
-  return (
-    Object.getPrototypeOf(obj) === Object.prototype &&
-    Object.getOwnPropertyNames(obj).length === 0 &&
-    Object.getOwnPropertySymbols(obj).length === 0
-  );
-};
 
 const capitalizeFirstLetter = (str: string): string => {
   if (str.length === 0) {
@@ -136,16 +140,20 @@ const lowerFirstLetter = (str: string): string => {
   return str.charAt(0).toLowerCase() + str.slice(1);
 };
 
+/**
+@returns file path for fileName or FileName in the same folder.
+@returns "" if file not exist
+**/
 const getFileExistIgnoreRegister = (folder: string, filename: string) => {
-  let resultPath = path.join(folder, lowerFirstLetter(filename) + ".txt");
+  let resultPath = join(folder, lowerFirstLetter(filename) + ".txt");
   let isFound = fs.existsSync(resultPath);
   if (!isFound) {
-    resultPath = path.join(folder, capitalizeFirstLetter(filename) + ".txt");
+    resultPath = join(folder, capitalizeFirstLetter(filename) + ".txt");
     isFound = fs.existsSync(resultPath);
   }
 
   if (!isFound) {
-    return path.join('');
+    return join('');
   }
   return resultPath;
 };

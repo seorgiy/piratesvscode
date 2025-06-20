@@ -1,8 +1,8 @@
 {
   "name": "piratesvscode",
   "displayName": "PiratesVSCode",
-  "description": "",
-  "version": "0.0.6",
+  "description": "Extension for working with Storm-Engine scripts https://github.com/storm-devs/storm-engine/",
+  "version": "1.0.0",
   "engines": {
     "vscode": "^1.101.0"
   },
@@ -11,13 +11,25 @@
     "url": "https://github.com/seorgiy/piratesvscode"
   },
   "categories": [
-    "Other"
+    "Other",
+    "Snippets"
   ],
   "activationEvents": [
-    "onLanguage:c"
+    "onLanguage:c",
+    "onLanguage:csharp"
   ],
   "main": "./out/extension.js",
   "contributes": {
+    "snippets": [
+      {
+        "language": "c",
+        "path": "./snippets/piratesvscode.json"
+      },
+      {
+        "language": "csharp",
+        "path": "./snippets/piratesvscode.json"
+      }
+    ],
     "configuration": {
       "title": "PiratesVSCode",
       "type": "object",
@@ -40,31 +52,35 @@
     },
     "commands": [
       {
-        "command": "extension.translaterussian",
+        "command": "piratesvscode.openCurrentKeyFile",
+        "title": "CL open last translation file"
+      },
+      {
+        "command": "piratesvscode.translaterussian",
         "title": "CL русский"
       },
       {
-        "command": "extension.translateenglish",
+        "command": "piratesvscode.translateenglish",
         "title": "CL english"
       },
       {
-        "command": "extension.translatefrench",
+        "command": "piratesvscode.translatefrench",
         "title": "CL french"
       },
       {
-        "command": "extension.translategerman",
+        "command": "piratesvscode.translategerman",
         "title": "CL german"
       },
       {
-        "command": "extension.translatespanish",
+        "command": "piratesvscode.translatespanish",
         "title": "CL spanish"
       },
       {
-        "command": "extension.translatepolish",
+        "command": "piratesvscode.translatepolish",
         "title": "CL polish"
       },
       {
-        "command": "extension.translateitalian",
+        "command": "piratesvscode.translateitalian",
         "title": "CL italian"
       }
     ]
