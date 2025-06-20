@@ -1,69 +1,98 @@
 import * as vscode from 'vscode';
-import { Translater } from "./translater";
+import { Translator } from "./translator";
 
-let translater = new Translater();
-let myStatusBarItem: vscode.StatusBarItem;
-const languages = [
-	'russian',
-	'english',
-	'french',
-	'italian',
-	'german',
-	'polish',
-	'spanish'
+let translator = new Translator();
+const LANGUAGES = [
+  'russian',
+  'english',
+  'french',
+  'italian',
+  'german',
+  'polish',
+  'spanish'
 ];
 
 export function activate(context: vscode.ExtensionContext) {
-	languages.forEach(language => {
-		let commandName = `extension.translate${language}`;
-		let command = vscode.commands.registerCommand(commandName, translateHandler.bind(null, language));
-		context.subscriptions.push(command);
-	});
+  LANGUAGES.forEach(language => {
+    let commandName = `extension.translate${language}`;
+    let command = vscode.commands.registerCommand(commandName, translateHandler.bind(null, language));
+    context.subscriptions.push(command);
+  });
 
-	// const myCommandId = 'extension.showSelectionCount';
-	// context.subscriptions.push(vscode.commands.registerCommand(myCommandId, () => {
-	// 	const n = getNumberOfSelectedLines(vscode.window.activeTextEditor);
-	// 	vscode.window.showInformationMessage(`Yeah, ${n} line(s) selected... Keep going!`);
-	// }));
+  context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(e => onChangeConfig));
 
-	// myStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
-	// myStatusBarItem.command = myCommandId;
-	// context.subscriptions.push(myStatusBarItem);
-	// context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(updateStatusBarItem));
-	// context.subscriptions.push(vscode.window.onDidChangeTextEditorSelection(updateStatusBarItem));
-	// updateStatusBarItem();
+  vscode.languages.registerHoverProvider('c', {
+    provideHover(doc, position, _token) {
+      const currentWord = doc.getText(doc.getWordRangeAtPosition(position));
+      const translation = translator.translateKey(currentWord);
+      if (translation === "") {
+        return;
+      }
+
+      const contents = new vscode.MarkdownString(translation);
+      contents.isTrusted = true;
+
+      return new vscode.Hover(contents);
+    }
+  });
+
+  // const disposable = vscode.window.onDidChangeTextEditorSelection(onWordClick);
+  // context.subscriptions.push(disposable);
 }
 
-// function updateStatusBarItem(): void {
-// 	const n = getNumberOfSelectedLines(vscode.window.activeTextEditor);
-// 	if (n > 0) {
-// 		myStatusBarItem.text = `$(megaphone) ${n} line(s) selected`;
-// 		myStatusBarItem.show();
-// 	} else {
-// 		myStatusBarItem.hide();
-// 	}
-// }
-
-// function getNumberOfSelectedLines(editor: vscode.TextEditor | undefined): number {
-// 	let lines = 0;
-// 	if (editor) {
-// 		lines = editor.selections.reduce((prev, curr) => prev + (curr.end.line - curr.start.line), 0);
-// 	}
-// 	return lines;
-// }
-
 const translateHandler = (language: string) => {
-	const editor = vscode.window.activeTextEditor;
-	if (!editor) {
-		vscode.window.showErrorMessage(`Не открыт редактор`);
-		return {};
-	}
+  const editor = vscode.window.activeTextEditor;
+  if (!editor) {
+    vscode.window.showErrorMessage(`Не открыт редактор`);
+    return {};
+  }
 
-	const document = editor.document;
-	const selection = new vscode.Range(document.lineAt(0).range.start, document.lineAt(document.lineCount - 1).range.end);
-	const fileText = document.getText(selection);
-	const fileTextTranslated = translater.replaceLocalizationKeys(language, fileText);
-	editor.edit(editBuilder => {
-		editBuilder.replace(selection, fileTextTranslated);
-	});
+  const document = editor.document;
+  const selection = new vscode.Range(document.lineAt(0).range.start, document.lineAt(document.lineCount - 1).range.end);
+  const fileText = document.getText(selection);
+  const fileTextTranslated = translator.translateAllKeys(language, fileText);
+  editor.edit(editBuilder => {
+    editBuilder.replace(selection, fileTextTranslated);
+  });
+};
+
+// const onWordClick = (event: vscode.TextEditorSelectionChangeEvent) => {
+//   const editor = event.textEditor;
+//   const selection = editor.selection;
+
+//   if (!selection.isEmpty) {
+//     return;
+//   };
+
+//   const wordRange = editor.document.getWordRangeAtPosition(selection.active);
+//   if (wordRange) {
+//     const word = editor.document.getText(wordRange);
+//     const translation = Translator.translateKey(word);
+//     if (translation === "") {
+//       return;
+//     }
+//     vscode.window.showInformationMessage(`Вы кликнули по слову: ${translation}`);
+//     showHover(translation, wordRange, editor);
+//   }
+// };
+
+// const showHover = (content: string, range: vscode.Range, editor: vscode.TextEditor) => {
+//   const decoration: vscode.DecorationOptions[] = [];
+//   decoration.push({ range: range, hoverMessage: content });
+//   editor.setDecorations(largeNumberDecorationType, decoration);
+// };
+
+// const largeNumberDecorationType = vscode.window.createTextEditorDecorationType({
+//   // cursor: 'crosshair',
+//   // use a themable color. See package.json for the declaration and default values.
+//   backgroundColor: { id: 'myextension.largeNumberBackground' }
+// });
+
+// Example: Listening to configuration changes
+const onChangeConfig = (event: vscode.ConfigurationChangeEvent) => {
+  console.log(event);
+  if (event.affectsConfiguration('piratesConfig.preferredLanguage')) {
+    console.log("affectsConfiguration!");
+    translator.resetLibrary();
+  }
 };
