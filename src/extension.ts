@@ -1,28 +1,19 @@
-import { commands, Range, ExtensionContext, workspace, window, languages, ConfigurationChangeEvent } from "vscode";
+import { commands, Range, ExtensionContext, workspace, window, languages, ConfigurationChangeEvent, extensions } from "vscode";
 import { Translator } from "./translator";
 import { openCurrentKeyFile } from "./openCurrentKeyFile";
 import { OnHoverTranslation } from "./onHoverTranslation";
-import { LocalKey } from "./translator";
+import { LocKey } from "./stormLocalization";
 
 let translator = new Translator();
-const LANGUAGES = [
-  'russian',
-  'english',
-  'french',
-  'italian',
-  'german',
-  'polish',
-  'spanish'
-];
 
 export function activate(context: ExtensionContext) {
-  LANGUAGES.forEach(language => {
+  translator.getLanguages().forEach(language => {
     let commandName = `piratesvscode.translate${language}`;
     let command = commands.registerCommand(commandName, translateHandler.bind(null, language));
     context.subscriptions.push(command);
   });
 
-  commands.registerCommand("piratesvscode.openCurrentKeyFile", (locKey: LocalKey) => {
+  commands.registerCommand("piratesvscode.openCurrentKeyFile", (locKey: LocKey) => {
     openCurrentKeyFile.execute(locKey);
   });
 

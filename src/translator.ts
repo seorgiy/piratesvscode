@@ -1,40 +1,32 @@
 import * as fs from 'fs';
 import { join } from 'path';
 import { parse } from 'ini';
-import { workspace, window } from 'vscode';
-
-interface LocFile {
-  [key: string]: string,
-  absolutePath: string
-}
-
-interface LocLibrary {
-  [key: string]: LocFile
-}
-
-export interface LocalKey {
-  key: string,
-  value: string,
-  libraryPath: string
-}
+import { workspace, window, extensions } from 'vscode';
+import { LocFile, LocLibrary, LocKey } from "./stormLocalization";
 
 export class Translator {
-  #language: string;
+  #onHoverLanguage: string;
   #library: LocLibrary;
+  #languages: string[];
 
   constructor() {
-    this.#library = {};
-    this.#language = "";
+    this.#languages = getEnumValues('piratesConfig.preferredLanguage') || [];
+    this.#library = LocLibrary.create(this.#languages);
+    this.#onHoverLanguage = "";
     this.#updateLanguage();
   }
 
+  getLanguages = () => {
+    return this.#languages;
+  };
+
   resetLibrary() {
-    this.#library = {};
+    this.#library = LocLibrary.create(this.#languages);
     this.#updateLanguage();
   }
 
   translateKey = (word: string) => {
-    let resultKey: LocalKey = {key: word, value: "", libraryPath: "" };
+    let resultKey: LocKey = {key: word, value: "", libraryPath: "" };
     if (!word.includes("_")) {
       return resultKey;
     };
@@ -43,54 +35,55 @@ export class Translator {
     if (libraryName === null){
       return resultKey;
     }
-    let locals = this.#initLocFile(this.#language, libraryName[1]);
+
+    let locals = this.#initLocFile(this.#onHoverLanguage, libraryName[1]);
 
     if (locals.absolutePath === "") {
       return resultKey;
     }
 
-    resultKey.value = locals[word.toLowerCase()];
+    resultKey.value = locals.content[word.toLowerCase()];
     resultKey.libraryPath = locals.absolutePath;
     return resultKey;
   };
 
-  translateAllKeys = (language: string, input: string) => {
+  translateAllKeys = (translationLanguage: string, input: string) => {
     const regexp = /StringFromKey\((.*)\);?/g;
-    let locals: LocFile = { absolutePath: '' };
+    let locals = new LocFile(translationLanguage);
     let locName = "";
 
     const modifiedSentence = input.replaceAll(regexp, (match: string) => {
       let key = match.match(/\"(.*?)\"/) || [''];
       if (locName === "") {
         let keys = key[1].split("_");
-        locals = this.#initLocFile(language, keys[0]);
+        locals = this.#initLocFile(translationLanguage, keys[0]);
       }
-      return `"${locals[key[1].toLowerCase()]}"`;
+      return `"${locals.content[key[1].toLowerCase()]}"`;
     });
 
     return modifiedSentence;
   };
 
   #updateLanguage = () => {
-    this.#language = workspace.getConfiguration('').get('piratesConfig.preferredLanguage') || 'russian';
+    this.#onHoverLanguage = workspace.getConfiguration('').get('piratesConfig.preferredLanguage') || 'russian';
   };
 
-  #initLocFile = (language: string, fileName: string) => {
-    if (this.#library.hasOwnProperty(fileName)) {
-      return this.#library[fileName];
+  #initLocFile = (translationLanguage: string, fileName: string) => {
+    const result = this.#library.getFile(translationLanguage, fileName);
+    if (result.isParsed)
+    {
+      return result;
     }
-
-    const result: LocFile = { absolutePath: ''};
 
     const workspaceFolders = workspace.workspaceFolders;
     if (!workspaceFolders || workspaceFolders.length === 0) {
       window.showErrorMessage('Нет открытых рабочих папок.');
-      return { absolutePath: "" };
+      return result;
     }
     const editor = window.activeTextEditor;
     if (!editor) {
       window.showErrorMessage(`Не открыт редактор`);
-      return { absolutePath: "" };
+      return result;
     }
 
     const slash = process.platform === "win32" ? "\\" : "/";
@@ -101,32 +94,21 @@ export class Translator {
     const config = parse(iniContent);
     const localsPath = config[fileName];
     if (!localsPath) {
-      return { absolutePath: "" };
+      return result;
     }
 
-    const fileFolder = join(rootPath, "Resource", "INI", "texts", language, join(...localsPath.split("\\")));
+    const fileFolder = join(rootPath, "Resource", "INI", "texts", translationLanguage, join(...localsPath.split("\\")));
     const filePath: fs.PathOrFileDescriptor = getFileExistIgnoreRegister(fileFolder, fileName);
     if (!fs.existsSync(filePath)) {
-      return { absolutePath: "" };
+      return result;
     }
 
     const content = fs.readFileSync(filePath, { encoding: 'utf8', flag: 'r' });
-    this.#fillLocFile(result, content);
-    this.#library[fileName] = result;
+    result.parseTxt(content);
     result.absolutePath = filePath;
+    result.filename = fileName;
+    this.#library.addFile(result);
     return result;
-  };
-
-  /**
-  Breaking the string by { and }, transforming "key1{value1} key2{value2}" string into {key1: value1, key2: value2} object
-  **/
-  #fillLocFile = (locals: LocFile, text: string) => {
-    let array: string[] = text.split("}");
-    array.pop();
-    array.forEach(x => {
-      let array2: string[] = x.split("{");
-      locals[array2[0].trim().toLowerCase()] = array2[1].trim();
-    });
   };
 }
 
@@ -160,4 +142,23 @@ const getFileExistIgnoreRegister = (folder: string, filename: string) => {
     return join('');
   }
   return resultPath;
+};
+
+const getEnumValues = (settingKey: string): string[] | undefined => {
+  const extension = extensions.getExtension('Seorgiy.piratesvscode');
+  if (!extension) {
+      return undefined;
+  }
+  const packageJSON = extension.packageJSON;
+  const properties = packageJSON.contributes?.configuration?.properties;
+  if (!properties || !properties[settingKey]) {
+      return undefined;
+  }
+
+  const setting = properties[settingKey];
+  if (setting.enum && Array.isArray(setting.enum)) {
+      return setting.enum;
+  }
+
+  return undefined;
 };

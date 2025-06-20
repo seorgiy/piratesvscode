@@ -1,10 +1,10 @@
 import { MarkdownString, window, Hover, Uri, TextDocument, Position } from "vscode";
 import { Translator } from "./translator";
-import { LocalKey } from "./translator";
+import { LocKey } from "./stormLocalization";
 
 export const OnHoverTranslation = (doc: TextDocument, translator: Translator, position: Position) => {
   const currentWord = doc.getText(doc.getWordRangeAtPosition(position));
-  const localKey: LocalKey = translator.translateKey(currentWord);
+  const localKey: LocKey = translator.translateKey(currentWord);
   if (localKey.value === "") {
     return;
   }

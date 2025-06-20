@@ -1,8 +1,8 @@
 import { window, Uri, workspace, Selection, Range, TextEditorRevealType } from "vscode";
-import { LocalKey } from "./translator";
+import { LocKey } from "./stormLocalization";
 
 export class openCurrentKeyFile {
-  public static execute(locKey: LocalKey): void {
+  public static execute(locKey: LocKey): void {
     openFile(locKey.libraryPath).then(() => {
       const editor = window.activeTextEditor;
       if (!editor) {
