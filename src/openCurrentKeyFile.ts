@@ -27,5 +27,5 @@ export class openCurrentKeyFile {
 async function openFile(filePath: string) {
   const uri = Uri.file(filePath);
   const document = await workspace.openTextDocument(uri);
-  await window.showTextDocument(document);
+  await window.showTextDocument(document,{ preview: false });
 };
