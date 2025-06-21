@@ -48,7 +48,7 @@ export class Translator {
   };
 
   translateAllKeys = (translationLanguage: string, input: string) => {
-    const regexp = /StringFromKey\((.*)\);?/g;
+    const regexp = /(StringFromKey\(.*?\))/g;
     let locals = new LocFile(translationLanguage);
     let locName = "";
 
