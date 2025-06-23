@@ -4,42 +4,46 @@ import * as fs from 'fs';
 import * as cp from 'child_process';
 
 export class LogOpener {
-  #wsllogspath: string;
+  #logsPath: string;
 
   constructor() {
     if (process.platform === "win32") {
-      this.#wsllogspath = join(process.env.USERPROFILE || "", "Documents", "My Games", "Caribbean Legend", "Logs") || "";
+      this.#logsPath = join(process.env.USERPROFILE || "", "Documents", "My Games", "Caribbean Legend", "Logs") || "";
     }
     else if (process.platform === "linux") {
-      this.#wsllogspath = "";
+      this.#logsPath = "";
       getUserProfileFromWSL()
         .then((userProfile) => {
-          this.#wsllogspath = join(userProfile, "Documents", "My Games", "Caribbean Legend", "Logs") || "";
+          this.#logsPath = join(userProfile, "Documents", "My Games", "Caribbean Legend", "Logs") || "";
         })
         .catch(_error => {
-          this.#wsllogspath = "";
+          this.#logsPath = "";
         });
     }
     else {
-      this.#wsllogspath = "";
+      this.#logsPath = "";
     }
   }
 
   public execute(type: string): void {
     switch (type) {
       case "all":
-        openFile(join(this.#wsllogspath, "compile.log"));
-        openFile(join(this.#wsllogspath, "error.log"));
-        openFile(join(this.#wsllogspath, "system.log"));
+        openFile(join(this.#logsPath, "compile.log"))
+          .then(() => {
+            openFile(join(this.#logsPath, "error.log"))
+              .then(() => {
+                openFile(join(this.#logsPath, "system.log"));
+              });
+          });
         break;
       case "compile":
-        openFile(join(this.#wsllogspath, "compile.log"));
+        openFile(join(this.#logsPath, "compile.log"));
         break;
       case "system":
-        openFile(join(this.#wsllogspath, "system.log"));
+        openFile(join(this.#logsPath, "system.log"));
         break;
       case "error":
-        openFile(join(this.#wsllogspath, "error.log"));
+        openFile(join(this.#logsPath, "error.log"));
         break;
     }
   }
