@@ -1,9 +1,4 @@
 # Change Log
 
-All notable changes to the "piratesvscode" extension will be documented in this file.
-
-Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
-
-## [Unreleased]
-
-- Initial release
+## [1.1.4] - 24.06.2025
+- new commands for opening the game logs

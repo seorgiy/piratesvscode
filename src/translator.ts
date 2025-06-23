@@ -75,11 +75,6 @@ export class Translator {
       return result;
     }
 
-    const workspaceFolders = workspace.workspaceFolders;
-    if (!workspaceFolders || workspaceFolders.length === 0) {
-      window.showErrorMessage('Нет открытых рабочих папок.');
-      return result;
-    }
     const editor = window.activeTextEditor;
     if (!editor) {
       window.showErrorMessage(`Не открыт редактор`);

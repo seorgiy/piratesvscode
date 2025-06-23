@@ -3,7 +3,7 @@
   "publisher": "Seorgiy",
   "displayName": "PiratesVSCode",
   "description": "Extension for working with Storm-Engine scripts https://github.com/storm-devs/storm-engine/",
-  "version": "1.1.3",
+  "version": "1.1.4",
   "engines": {
     "vscode": "^1.101.0"
   },
@@ -60,6 +60,22 @@
       {
         "command": "piratesvscode.openCurrentKeyFile",
         "title": "CL open last translation file"
+      },
+      {
+        "command": "piratesvscode.openLogsAll",
+        "title": "CL open logs all"
+      },
+      {
+        "command": "piratesvscode.openLogsCompile",
+        "title": "CL open logs compile"
+      },
+      {
+        "command": "piratesvscode.openLogsSystem",
+        "title": "CL open logs system"
+      },
+      {
+        "command": "piratesvscode.openLogsError",
+        "title": "CL open logs error"
       },
       {
         "command": "piratesvscode.translaterussian",
