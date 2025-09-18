@@ -39,13 +39,31 @@
 	"CheckAttribute": {
 		"scope": "",
 		"prefix": "checkat",
-		"body": ["CheckAttribute(&$1, $2)$0"]
+		"body": ["CheckAttribute($1, $2)$0"]
+	},
+
+	"GetAttributesNum": {
+		"scope": "",
+		"prefix": "getats",
+		"body": ["GetAttributesNum($1)$0"]
+	},
+
+	"GetAttributeN": {
+		"scope": "",
+		"prefix": "getat",
+		"body": ["GetAttributeN($1, $2)$0"]
+	},
+
+	"GetAttributeName": {
+		"scope": "",
+		"prefix": "getan",
+		"body": ["GetAttributeName($1)$0"]
 	},
 
 	"DeleteAttribute": {
 		"scope": "",
 		"prefix": "delat",
-		"body": ["DeleteAttribute(&$1, $2);$0"]
+		"body": ["DeleteAttribute($1, $2);$0"]
 	},
 
 	"IfCheckAttribute": {
