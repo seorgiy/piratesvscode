@@ -3,7 +3,7 @@
   "publisher": "Seorgiy",
   "displayName": "PiratesVSCode",
   "description": "Extension for working with Storm-Engine scripts https://github.com/storm-devs/storm-engine/",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "engines": {
     "vscode": "^1.101.0"
   },
