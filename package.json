@@ -74,6 +74,14 @@
         "title": "CL change coordinates Y"
       },
       {
+        "command": "piratesvscode.coordinatesXResize",
+        "title": "CL resize X"
+      },
+      {
+        "command": "piratesvscode.coordinatesYResize",
+        "title": "CL resize Y"
+      },
+      {
         "command": "piratesvscode.openLogsAll",
         "title": "CL open logs all"
       },

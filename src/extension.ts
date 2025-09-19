@@ -39,7 +39,7 @@ export function activate(context: ExtensionContext) {
     }
 
     askUserNumber().then(numberToAdd => { 
-      if (numberToAdd !== undefined) { changeCoordinates(numberToAdd, editor, 0, 2); };
+      if (numberToAdd !== undefined) { changeCoordinates(numberToAdd, numberToAdd ,editor, 0, 2); };
     });
   });
 
@@ -50,7 +50,29 @@ export function activate(context: ExtensionContext) {
     }
 
     askUserNumber().then(numberToAdd => { 
-      if (numberToAdd !== undefined) { changeCoordinates(numberToAdd, editor, 1, 3); };
+      if (numberToAdd !== undefined) { changeCoordinates(numberToAdd, numberToAdd, editor, 1, 3); };
+    });
+  });
+
+  commands.registerCommand("piratesvscode.coordinatesYResize", () => {
+    const editor = window.activeTextEditor;
+    if (!editor) {
+      return {};
+    }
+
+    askUserNumber().then(numberToAdd => { 
+      if (numberToAdd !== undefined) { changeCoordinates(-numberToAdd/2, numberToAdd/2, editor, 1, 3); };
+    });
+  });
+
+  commands.registerCommand("piratesvscode.coordinatesXResize", () => {
+    const editor = window.activeTextEditor;
+    if (!editor) {
+      return {};
+    }
+
+    askUserNumber().then(numberToAdd => { 
+      if (numberToAdd !== undefined) { changeCoordinates(-numberToAdd/2, numberToAdd/2, editor, 0, 2); };
     });
   });
 
@@ -101,31 +123,32 @@ function askUserNumber(): Thenable<number | undefined> {
   });
 }
 
-function changeCoordinates(numberToAdd: number, editor: TextEditor, posA: number, posB: number)
+function changeCoordinates(numberToAddStart: number, numberToAddEnd: number, editor: TextEditor, posA: number, posB: number)
 {
-  const selection = editor.selection;
-  const text = editor.document.getText(selection);
-
-  if (text.length === 0) {
-    window.showInformationMessage('Select some coordinates, for example: 12,12,24,24');
-    return;
-  }
-
-  const groupRegex = /(-?\d+),\s*(-?\d+),\s*(-?\d+),\s*(-?\d+)/g;
-
-  const newText = text.replace(groupRegex, (match, g1, g2, g3, g4) => {
-    const numbers = [g1, g2, g3, g4].map(n => Number(n));
-     // Проверяем на NaN
-    if (numbers.some(n => isNaN(n))) {
-      return match;
-    }
-
-    numbers[posA] += numberToAdd;
-    numbers[posB] += numberToAdd;
-    return numbers.join(',');
-  });
-
   editor.edit(editBuilder => {
-    editBuilder.replace(selection, newText);
+    for (const selection of editor.selections) {
+      let text = editor.document.getText(selection);
+
+      if (text.length === 0) {
+        window.showInformationMessage('Select some coordinates, for example: 12,12,24,24');
+        continue;
+      }
+
+      const groupRegex = /(-?\d+),\s*(-?\d+),\s*(-?\d+),\s*(-?\d+)/g;
+
+      let newText = text.replace(groupRegex, (match, g1, g2, g3, g4) => {
+        const numbers = [g1, g2, g3, g4].map(n => Number(n));
+        // Проверяем на NaN
+        if (numbers.some(n => isNaN(n))) {
+          return match;
+        }
+
+        numbers[posA] += numberToAddStart;
+        numbers[posB] += numberToAddEnd;
+        return numbers.join(',');
+      });
+
+      editBuilder.replace(selection, newText);
+    }
   });
 }
