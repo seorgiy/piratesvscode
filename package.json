@@ -3,7 +3,7 @@
   "publisher": "Seorgiy",
   "displayName": "PiratesVSCode",
   "description": "Extension for working with Storm-Engine scripts https://github.com/storm-devs/storm-engine/",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "engines": {
     "vscode": "^1.101.0"
   },
@@ -21,22 +21,34 @@
     "Snippets"
   ],
   "activationEvents": [
-    "onLanguage:c"
+    "onLanguage:c",
+    "onLanguage:cpp"
   ],
   "main": "./out/extension.js",
   "contributes": {
     "grammars": [
       {
-        "path": "./syntaxes/codeblock.json",
+        "path": "./syntaxes/c.json",
         "scopeName": "source.c",
         "injectTo": [
           "source.c"
+        ]
+      },
+      {
+        "path": "./syntaxes/cpp.json",
+        "scopeName": "source.cpp",
+        "injectTo": [
+          "source.cpp"
         ]
       }
     ],
     "snippets": [
       {
         "language": "c",
+        "path": "./snippets/piratesvscode.json"
+      },
+      {
+        "language": "cpp",
         "path": "./snippets/piratesvscode.json"
       }
     ],
